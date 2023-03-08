@@ -1,91 +1,116 @@
 import React, { Component } from 'react';
 
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-import Searchbar from './Searchbar/Searchbar';
+import SearchBar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
-import Loader from './Loader/Loader';
+import Modal from './Modal/Modal';
 import Button from './Button/Button';
+import Spinner from './Loader/Loader';
 
-export default class App extends Component {
+import fetchImages from './Service';
+
+class App extends Component {
   state = {
-    URL: 'https://pixabay.com/api/',
-    API_KEY: '33147966-e46ab7a6ff68dbc7e8ecb4430',
-    pictures: [],
-    error: '',
-    status: 'idle',
+    modalContent: '',
+    searchQuery: '',
     page: 1,
-    query: '',
-    totalHits: null,
+    visibleImages: [],
+    isLoading: false,
+    openModal: false,
   };
 
-  fetchImg = () => {
-    return fetch(
-      `${this.state.URL}?q=${this.state.query}&page=${this.state.page}&key=${this.state.API_KEY}&image_type=photo&orientation=horizontal&per_page=12`
-    )
-      .then(res => {
-        if (res.ok) {
-          return res.json();
-        }
-        return Promise.reject(new Error('Failed to find any images'));
-      })
-      .then(pictures => {
-        if (!pictures.total) {
-          toast.error('Did find anything, mate');
-        }
-        const selectedProperties = pictures.hits.map(
-          ({ id, largeImageURL, webformatURL }) => {
-            return { id, largeImageURL, webformatURL };
-          }
-        );
-        this.setState(prevState => {
-          return {
-            pictures: [...prevState.pictures, ...selectedProperties],
-            status: 'resolved',
-            totalHits: pictures.total,
-          };
-        });
-      })
-      .catch(error => this.setState({ error, status: 'rejected' }));
-  };
+  componentDidUpdate(prevProps, { searchQuery, page }) {
+    if (searchQuery !== this.state.searchQuery || page !== this.state.page) {
+      this.getData();
+    }
+    this.handleScroll();
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.query !== prevState.query) {
-      this.setState({ status: 'pending', pictures: [], page: 1 });
-      this.fetchImg();
-    }
-    if (
-      this.state.query === prevState.query &&
-      this.state.page !== prevState.page
-    ) {
-      this.setState({ status: 'pending' });
-      this.fetchImg();
-    }
+    // if (page !== this.state.page) {
+    //   this.getData();
+    // }
   }
 
-  processSubmit = query => {
-    this.setState({ query });
+  toggleModal = () => {
+    this.setState(({ openModal }) => ({ openModal: !openModal }));
   };
 
-  handleLoadMore = () => {
-    this.setState(prevState => {
-      return { page: prevState.page + 1 };
+  toggleLoading = () => {
+    this.setState(({ isLoading }) => ({ isLoading: !isLoading }));
+  };
+
+  hadleChangeQuery = query => {
+    this.setState({
+      searchQuery: query,
+      page: 1,
+      visibleImages: [],
     });
   };
 
+  handleNextPage = () => {
+    this.setState(({ page }) => {
+      return {
+        page: page + 1,
+      };
+    });
+  };
+
+  handleScroll = () => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth',
+    });
+  };
+
+  modalContentSet = itemId => {
+    const { visibleImages } = this.state;
+    const element = visibleImages.find(({ id }) => id === itemId);
+    this.setState({ modalContent: element.largeImageURL });
+  };
+
+  getData = () => {
+    const { searchQuery, page } = this.state;
+    this.toggleLoading();
+    fetchImages(searchQuery, page)
+      .then(({ hits }) => {
+        this.setState(({ visibleImages }) => {
+          return { visibleImages: [...visibleImages, ...hits] };
+        });
+      })
+      // .then(this.handleScroll)
+      .catch(error => console.log(error.message))
+      .finally(this.toggleLoading);
+  };
+
   render() {
-    const { pictures, status, totalHits } = this.state;
+    const { visibleImages, openModal, modalContent, isLoading, page } =
+      this.state;
+    const isNotLastPage = visibleImages.length / page === 12;
+    const btnEnable = visibleImages.length > 0 && !isLoading && isNotLastPage;
     return (
-      <>
-        <Searchbar onSubmit={this.processSubmit} />
-        {pictures.length && <ImageGallery images={pictures} />}
-        {totalHits > pictures.length && (
-          <Button onClick={this.handleLoadMore} />
+      <div className="App">
+        <SearchBar onSubmit={this.hadleChangeQuery} />
+        {visibleImages.length === 0 ? (
+          <h2>Enter your request</h2>
+        ) : (
+          <>
+            <ImageGallery
+              images={visibleImages}
+              onClick={this.toggleModal}
+              onItemClick={this.modalContentSet}
+            />
+
+            {openModal && (
+              <Modal content={modalContent} onBackdrop={this.toggleModal} />
+            )}
+            {isLoading && <Spinner />}
+
+            {btnEnable && (
+              <Button name="Load more" onPress={this.handleNextPage} />
+            )}
+          </>
         )}
-        {status === 'pending' && <Loader />}
-        <ToastContainer autoClose={2000} />
-      </>
+      </div>
     );
   }
 }
+
+export default App;

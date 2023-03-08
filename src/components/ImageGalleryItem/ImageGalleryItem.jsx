@@ -1,19 +1,27 @@
 import React, { Component } from 'react';
-import s from './ImageGalleryItem.module.css';
 import PropTypes from 'prop-types';
 
-export default class ImageGalleryItem extends Component {
+class ImageGalleryItem extends Component {
+  static propTypes = {
+    onItemClick: PropTypes.func.isRequired,
+    id: PropTypes.number.isRequired,
+    webformatURL: PropTypes.string.isRequired,
+  };
+
+  modalContent = id => {
+    this.props.onItemClick(id);
+    console.log(id);
+  };
   render() {
+    const { id, webformatURL } = this.props;
     return (
-      <li className={s.galleryItem}>
-        <img src={this.props.smallImgURL} alt={this.props.id} />
-      </li>
+      <img
+        src={webformatURL}
+        alt=""
+        onClick={() => this.modalContent(id)}
+      />
     );
   }
 }
 
-
-ImageGalleryItem.propTypes = {
-  id: PropTypes.number.isRequired,
-  smallImgURL: PropTypes.string.isRequired,
-};
+export default ImageGalleryItem;
