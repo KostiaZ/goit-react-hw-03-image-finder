@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import s from 'components/ImageGalleryItem/ImageGalleryItem.module.css';
 
 class ImageGalleryItem extends Component {
   static propTypes = {
@@ -16,6 +17,7 @@ class ImageGalleryItem extends Component {
     const { id, webformatURL } = this.props;
     return (
       <img
+        className={s.img}
         src={webformatURL}
         alt=""
         onClick={() => this.modalContent(id)}

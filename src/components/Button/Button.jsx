@@ -1,8 +1,9 @@
 import PropTypes from 'prop-types';
+import s from 'components/Button/Button.module.css';
 
 const Button = ({ onPress }) => {
   return (
-    <button type="button" onClick={onPress}>
+    <button className={s.button} type="button" onClick={onPress}>
       Load more
     </button>
   );
