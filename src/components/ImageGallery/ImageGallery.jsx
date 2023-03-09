@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import ImageGalleryItem from 'components/ImageGalleryItem/ImageGalleryItem';
 import React, { Component } from 'react';
+import s from 'components/ImageGallery/ImageGallery.module.css';
 
 class ImageGallery extends Component {
   static propTypes = {
@@ -22,7 +23,7 @@ class ImageGallery extends Component {
   render() {
     const { images, onItemClick } = this.props;
     return (
-      <ul onClick={this.handleOpenModal}>
+      <ul className={s.gallery} onClick={this.handleOpenModal}>
         {images &&
           images.map(image => (
             <li key={image.id}>
