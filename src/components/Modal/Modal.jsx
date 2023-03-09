@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 
 import PropTypes from 'prop-types';
 
+import s from 'components/Modal/Modal.module.css';
+
 class Modal extends Component {
   static propTypes = {
     onBackdrop: PropTypes.func.isRequired,
@@ -32,8 +34,8 @@ class Modal extends Component {
     const { content } = this.props;
     console.log(content);
     return (
-      <div onClick={this.handleBackdropClick}>
-        <div>
+      <div className={s.overlay} onClick={this.handleBackdropClick}>
+        <div className={s.modal}>
           <img src={content} alt="" />
         </div>
       </div>
